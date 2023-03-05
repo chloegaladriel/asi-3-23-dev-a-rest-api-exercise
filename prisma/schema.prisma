@@ -1,0 +1,59 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  password      String
+  passwordSalt  String?
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  role          Role    @relation(fields: [roleId], references: [id])
+  roleId        Int
+  creatorPages  Page[]  @relation(name: "creator")
+  modifierPages Page[]  @relation(name: "modifiers")
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String
+  users       User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id       Int    @id @default(autoincrement())
+  action   String
+  resource String
+  role     Role   @relation(fields: [roleId], references: [id])
+  roleId   Int
+}
+
+model Page {
+  id               Int             @id @default(autoincrement())
+  title            String
+  content          String
+  slug             String?         @unique
+  publishedAt      DateTime        @default(now())
+  status           String          @default("draft")
+  navigationMenu   NavigationMenu? @relation(fields: [navigationMenuId], references: [id])
+  navigationMenuId Int?
+
+  creator   User @relation(fields: [creatorId], references: [id], name: "creator")
+  creatorId Int
+
+  modifiers User[] @relation(name: "modifiers")
+}
+
+model NavigationMenu {
+  id    Int    @id @default(autoincrement())
+  name  String
+  pages Page[]
+}
